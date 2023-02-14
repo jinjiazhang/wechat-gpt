@@ -40,8 +40,8 @@ func WeChatMessage(ctx context.Context, req *MessageReq) (*MessageRsp, error) {
 		ToUserName:   req.FromUserName,
 		FromUserName: req.ToUserName,
 		CreateTime:   time.Now().Unix(),
-		MsgType:      reply,
-		Content:      req.Content,
+		MsgType:      "text",
+		Content:      reply,
 	}
 
 	return rsp, nil

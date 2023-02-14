@@ -11,6 +11,8 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+var API_KEY string
+
 type ChatGPTRequest struct {
 	Model            string  `json:"model"`
 	Prompt           string  `json:"prompt"`
@@ -69,9 +71,8 @@ func RequestChatGPT(prompt string) (string, error) {
 		return "", err
 	}
 
-	apiKey := "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"
 	request.Header.Set("Content-Type", "application/json")
-	request.Header.Set("Authorization", "Bearer "+apiKey)
+	request.Header.Set("Authorization", "Bearer "+API_KEY)
 	client := &http.Client{Timeout: 30 * time.Second}
 	response, err := client.Do(request)
 	if err != nil {

@@ -5,6 +5,7 @@ import (
 	"crypto/sha1"
 	"encoding/hex"
 	"encoding/xml"
+	"flag"
 	"fmt"
 	"io"
 	"net/http"
@@ -14,6 +15,10 @@ import (
 )
 
 func main() {
+	apiKey := flag.String("key", "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", "chatgpt api-key")
+	flag.Parse()
+
+	API_KEY = *apiKey
 	http.HandleFunc("/message", HandleMessage)
 	http.ListenAndServe(":8080", nil)
 }
