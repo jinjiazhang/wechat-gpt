@@ -2,19 +2,50 @@ package main
 
 import (
 	"context"
+	"crypto/sha1"
+	"encoding/hex"
 	"encoding/xml"
+	"fmt"
 	"io"
 	"net/http"
+	"sort"
 
 	log "github.com/sirupsen/logrus"
 )
 
 func main() {
-	http.HandleFunc("/message", handleMessage)
+	http.HandleFunc("/message", HandleMessage)
 	http.ListenAndServe(":8080", nil)
 }
 
-func handleMessage(w http.ResponseWriter, r *http.Request) {
+func HandleMessage(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case "GET":
+		HandleMessage_GET(w, r)
+	case "POST":
+		HandleMessage_POST(w, r)
+	}
+}
+
+func HandleMessage_GET(w http.ResponseWriter, r *http.Request) {
+	fmt.Printf("url: %s", r.URL.String())
+	query := r.URL.Query()
+
+	token := "jinjiazh"
+	signature := query.Get("signature")
+	timestamp := query.Get("timestamp")
+	nonce := query.Get("nonce")
+	echostr := query.Get("echostr")
+
+	sl := []string{token, timestamp, nonce}
+	sort.Strings(sl)
+	sum := sha1.Sum([]byte(sl[0] + sl[1] + sl[2]))
+	if signature == hex.EncodeToString(sum[:]) {
+		w.Write([]byte(echostr))
+	}
+}
+
+func HandleMessage_POST(w http.ResponseWriter, r *http.Request) {
 	reqBody, err := io.ReadAll(r.Body)
 	if err != nil {
 		log.Errorf("HandleMessage read body fail, err: %+v", err)
@@ -28,7 +59,7 @@ func handleMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rsp, err := HandleMessage(context.TODO(), req)
+	rsp, err := WeChatMessage(context.TODO(), req)
 	if err != nil {
 		log.Errorf("HandleMessage handle func fail, err: %+v", err)
 		return
@@ -49,5 +80,5 @@ func handleMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Infof("handleMessage req: %s, rsp: %s", string(reqBody), string(rspBody))
+	log.Infof("WeChatMessage req: %s, rsp: %s", string(reqBody), string(rspBody))
 }
