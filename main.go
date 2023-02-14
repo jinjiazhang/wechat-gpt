@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	http.HandleFunc("message", handleMessage)
+	http.HandleFunc("/message", handleMessage)
 	http.ListenAndServe(":8080", nil)
 }
 
@@ -48,4 +48,6 @@ func handleMessage(w http.ResponseWriter, r *http.Request) {
 		log.Errorf("HandleMessage write body fail, err: %+v", err)
 		return
 	}
+
+	log.Infof("handleMessage req: %s, rsp: %s", string(reqBody), string(rspBody))
 }
