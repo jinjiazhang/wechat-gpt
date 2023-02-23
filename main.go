@@ -15,7 +15,7 @@ import (
 )
 
 func main() {
-	apiKey := flag.String("key", "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", "chatgpt api-key")
+	apiKey := flag.String("key", "sk-***", "chatgpt api-key")
 	flag.Parse()
 
 	API_KEY = *apiKey
@@ -57,6 +57,9 @@ func HandleMessage_POST(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.Header().Set("Content-Type", "application/xml; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+
 	req := &MessageReq{}
 	err = xml.Unmarshal(reqBody, req)
 	if err != nil {
@@ -75,9 +78,6 @@ func HandleMessage_POST(w http.ResponseWriter, r *http.Request) {
 		log.Errorf("HandleMessage marshal rsp fail, err: %+v", err)
 		return
 	}
-
-	w.Header().Set("Content-Type", "application/xml; charset=utf-8")
-	w.WriteHeader(http.StatusOK)
 
 	_, err = w.Write(rspBody)
 	if err != nil {

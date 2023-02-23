@@ -2,47 +2,71 @@ package main
 
 import (
 	"context"
-	"encoding/xml"
+	"fmt"
 	"time"
-
-	log "github.com/sirupsen/logrus"
 )
 
-type MessageReq struct {
-	ToUserName   string `xml:"ToUserName"`
-	FromUserName string `xml:"FromUserName"`
-	CreateTime   int64  `xml:"CreateTime"`
-	MsgType      string `xml:"MsgType"`
-	Content      string `xml:"Content"`
-	MsgId        int64  `xml:"MsgId"`
-	MsgDataId    int64  `xml:"MsgDataId"`
-	Idx          int64  `xml:"Idx"`
-	Event        string `xml:"Event"`
-}
-
-type MessageRsp struct {
-	XMLName      xml.Name `xml:"xml"`
-	ToUserName   string   `xml:"ToUserName"`
-	FromUserName string   `xml:"FromUserName"`
-	CreateTime   int64    `xml:"CreateTime"`
-	MsgType      string   `xml:"MsgType"`
-	Content      string   `xml:"Content"`
+func WelcomeText() string {
+	return "welcome"
 }
 
 func WeChatMessage(ctx context.Context, req *MessageReq) (*MessageRsp, error) {
-	reply, err := RequestChatGPT(req.Content)
-	if err != nil {
-		log.Errorf("WeChatMessage request fail, err: %+v", err)
-		reply = err.Error()
+	switch req.MsgType {
+	case kMsgTypeEvent:
+		return WeChatEvent(ctx, req)
+	case kMsgTypeText:
+		return WeChatText(ctx, req)
+	case kMsgTypeImage:
+		return WeChatImage(ctx, req)
+	default:
+		rsp := &MessageRsp{
+			ToUserName:   req.FromUserName,
+			FromUserName: req.ToUserName,
+			CreateTime:   time.Now().Unix(),
+			MsgType:      kMsgTypeText,
+			TextData: TextData{
+				Content: fmt.Sprintf("MsgType: %s", req.MsgType),
+			},
+		}
+		return rsp, nil
 	}
+}
 
+func WeChatEvent(ctx context.Context, req *MessageReq) (*MessageRsp, error) {
 	rsp := &MessageRsp{
 		ToUserName:   req.FromUserName,
 		FromUserName: req.ToUserName,
 		CreateTime:   time.Now().Unix(),
-		MsgType:      "text",
-		Content:      reply,
+		MsgType:      kMsgTypeText,
+		TextData: TextData{
+			Content: WelcomeText(),
+		},
 	}
+	return rsp, nil
+}
 
+func WeChatText(ctx context.Context, req *MessageReq) (*MessageRsp, error) {
+	rsp := &MessageRsp{
+		ToUserName:   req.FromUserName,
+		FromUserName: req.ToUserName,
+		CreateTime:   time.Now().Unix(),
+		MsgType:      kMsgTypeText,
+		TextData: TextData{
+			Content: req.Content,
+		},
+	}
+	return rsp, nil
+}
+
+func WeChatImage(ctx context.Context, req *MessageReq) (*MessageRsp, error) {
+	rsp := &MessageRsp{
+		ToUserName:   req.FromUserName,
+		FromUserName: req.ToUserName,
+		CreateTime:   time.Now().Unix(),
+		MsgType:      kMsgTypeImage,
+		ImageData: ImageData{
+			MediaId: req.ImageData.MediaId,
+		},
+	}
 	return rsp, nil
 }
