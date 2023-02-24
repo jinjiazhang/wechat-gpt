@@ -73,6 +73,12 @@ func HandleMessage_POST(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if rsp == nil {
+		// 回复success，这样微信服务器不会对此作任何处理，并且不会发起重试
+		w.Write([]byte("success"))
+		return
+	}
+
 	rspBody, err := xml.Marshal(rsp)
 	if err != nil {
 		log.Errorf("HandleMessage marshal rsp fail, err: %+v", err)

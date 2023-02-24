@@ -4,11 +4,9 @@ import (
 	"context"
 	"fmt"
 	"time"
-)
 
-func WelcomeText() string {
-	return "welcome"
-}
+	log "github.com/sirupsen/logrus"
+)
 
 func WeChatMessage(ctx context.Context, req *MessageReq) (*MessageRsp, error) {
 	switch req.MsgType {
@@ -25,7 +23,7 @@ func WeChatMessage(ctx context.Context, req *MessageReq) (*MessageRsp, error) {
 			CreateTime:   time.Now().Unix(),
 			MsgType:      kMsgTypeText,
 			TextData: TextData{
-				Content: fmt.Sprintf("MsgType: %s", req.MsgType),
+				Content: fmt.Sprintf("Unknow MsgType: %s", req.MsgType),
 			},
 		}
 		return rsp, nil
@@ -39,20 +37,30 @@ func WeChatEvent(ctx context.Context, req *MessageReq) (*MessageRsp, error) {
 		CreateTime:   time.Now().Unix(),
 		MsgType:      kMsgTypeText,
 		TextData: TextData{
-			Content: WelcomeText(),
+			Content: UsageText(),
 		},
 	}
 	return rsp, nil
 }
 
 func WeChatText(ctx context.Context, req *MessageReq) (*MessageRsp, error) {
+	reply, err := TextMessage(req.FromUserName, req.Content)
+	if err != nil {
+		log.Errorf("TextMessage err: %+v", err)
+		reply = fmt.Sprintf("TextMessage err: %+v", err)
+	}
+
+	if reply == "" {
+		return nil, nil
+	}
+
 	rsp := &MessageRsp{
 		ToUserName:   req.FromUserName,
 		FromUserName: req.ToUserName,
 		CreateTime:   time.Now().Unix(),
 		MsgType:      kMsgTypeText,
 		TextData: TextData{
-			Content: req.Content,
+			Content: reply,
 		},
 	}
 	return rsp, nil
