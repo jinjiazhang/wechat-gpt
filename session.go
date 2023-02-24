@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	sessionMap map[string]*Session
+	sessionMap = make(map[string]*Session)
 	mapMutex   sync.Mutex
 )
 
