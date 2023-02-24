@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"sync"
 	"time"
 )
@@ -45,21 +46,7 @@ func (s *Session) Chat(text string) error {
 		time:   time.Now().Unix(),
 	})
 
-	go func() {
-		reply, err := RequestChatGPT(s.prompt())
-		if err != nil {
-			NotifyUser(s.openid, err.Error())
-			return
-		}
-
-		s.push(&Message{
-			author: "Robot",
-			text:   reply,
-			time:   time.Now().Unix(),
-		})
-		NotifyUser(s.openid, reply)
-	}()
-
+	go s.process(s.prompt())
 	return nil
 }
 
@@ -80,5 +67,34 @@ func (s *Session) push(message *Message) error {
 }
 
 func (s *Session) prompt() string {
-	return ""
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
+	head := "The following is a conversation with an AI assistant. The assistant is helpful, creative, clever, and very friendly.\n\n"
+	text := "AI:"
+	size := len(s.messages)
+	for i := 0; i < size; i++ {
+		message := s.messages[size-i-1]
+		if time.Now().Unix()-message.time > 7200 {
+			break
+		}
+
+		text = fmt.Sprintf("%s: %s\n%s", message.author, message.text, text)
+	}
+	return head + text
+}
+
+func (s *Session) process(prompt string) {
+	reply, err := RequestChatGPT(s.prompt())
+	if err != nil {
+		NotifyUser(s.openid, err.Error())
+		return
+	}
+
+	s.push(&Message{
+		author: "AI",
+		text:   reply,
+		time:   time.Now().Unix(),
+	})
+	NotifyUser(s.openid, reply)
 }
