@@ -35,6 +35,8 @@ func HandleMessage(w http.ResponseWriter, r *http.Request) {
 		HandleMessage_GET(w, r)
 	case "POST":
 		HandleMessage_POST(w, r)
+	case "PUT":
+		HandleMessage_PUT(w, r)
 	}
 }
 
@@ -97,4 +99,29 @@ func HandleMessage_POST(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Infof("WeChatMessage req: %s, rsp: %s", string(reqBody), string(rspBody))
+}
+
+func HandleMessage_PUT(w http.ResponseWriter, r *http.Request) {
+	reqBody, err := io.ReadAll(r.Body)
+	if err != nil {
+		log.Errorf("HandleMessage read body fail, err: %+v", err)
+		return
+	}
+
+	reply, err := TextMessage("Admin", string(reqBody))
+	if err != nil {
+		log.Errorf("HandleMessage err: %+v", err)
+		reply = err.Error()
+	}
+
+	w.Header().Set("Content-Type", "application/xml; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+
+	_, err = w.Write([]byte(reply))
+	if err != nil {
+		log.Errorf("HandleMessage write body fail, err: %+v", err)
+		return
+	}
+
+	log.Infof("HandleMessage req: %s, rsp: %s", string(reqBody), reply)
 }

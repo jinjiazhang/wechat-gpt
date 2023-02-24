@@ -92,6 +92,7 @@ func reqAccessToken() (string, error) {
 }
 
 func SendTextMessage(openid string, text string) error {
+	log.Infof("SendTextMessage openid: %s, text: %s", openid, text)
 	req := &WxNotifyRequest{
 		ToUser:  openid,
 		MsgType: kMsgTypeText,
