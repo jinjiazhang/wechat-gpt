@@ -47,9 +47,9 @@ type ChoiceItem struct {
 // -H "Content-Type: application/json"
 // -H "Authorization: Bearer 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"
 // -d '{"model": "text-davinci-003", "prompt": "地球为什么绕太阳转", "temperature": 0, "max_tokens": 2048}'
-func RequestChatGPT(prompt string) (string, error) {
+func RequestChatGPT(model string, prompt string) (string, error) {
 	req := ChatGPTRequest{
-		Model:            "text-davinci-003",
+		Model:            model,
 		Prompt:           prompt,
 		MaxTokens:        2048,
 		Temperature:      0.8,

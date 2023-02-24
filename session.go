@@ -22,6 +22,8 @@ type Session struct {
 	name     string
 	proem    string
 	friend   string
+	model    string
+	mode     string
 	messages []*Message
 	mutex    sync.Mutex
 }
@@ -35,7 +37,7 @@ func GetSession(openid string) *Session {
 	}
 
 	session := &Session{openid: openid}
-	session.Reset()
+	session.Reset("")
 
 	sessionMap[openid] = session
 	return session
@@ -48,7 +50,7 @@ func (s *Session) Ask(text string) (string, error) {
 		time:   time.Now().Unix(),
 	})
 
-	reply, err := RequestChatGPT(s.prompt())
+	reply, err := RequestChatGPT(s.model, s.prompt())
 	if err != nil {
 		return "", err
 	}
@@ -72,20 +74,55 @@ func (s *Session) Chat(text string) error {
 	return nil
 }
 
-func (s *Session) Reset() error {
+func (s *Session) Reset(mode string) error {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
-
-	s.name = "Human"
-	s.friend = "AI"
-	s.proem = "The following is a conversation with an AI assistant. The assistant is helpful, creative, clever, and very friendly.\n\n"
 	s.messages = make([]*Message, 0)
+
+	switch mode {
+	case "c", "Chat":
+		s.mode = "Chat"
+		s.model = "text-davinci-003"
+		s.name = "You"
+		s.friend = "Friend"
+		s.proem = ""
+	case "f", "Funny":
+		s.mode = "Marv"
+		s.model = "text-davinci-003"
+		s.name = "You"
+		s.friend = "Marv"
+		s.proem = "Marv is a chatbot that reluctantly answers questions with humorous responses:\n\n"
+	case "k", "Keywords":
+		s.mode = "Keywords"
+		s.model = "text-davinci-003"
+		s.name = ""
+		s.friend = ""
+		s.proem = "Extract keywords from this text:\n\n"
+		s.messages = nil
+	case "q", "Q&A":
+		s.mode = "Q&A"
+		s.model = "text-davinci-003"
+		s.name = "Q"
+		s.friend = "A"
+		s.proem = "I am a highly intelligent question answering bot. If you ask me a question that is rooted in truth, I will give you the answer. If you ask me a question that is nonsense, trickery, or has no clear answer, I will respond with \"Unknown\".\n\n"
+	default:
+		s.mode = "AI assistant"
+		s.model = "text-davinci-003"
+		s.name = "Human"
+		s.friend = "AI"
+		s.proem = "The following is a conversation with an AI assistant. The assistant is helpful, creative, clever, and very friendly.\n\n"
+	}
+
 	return nil
 }
 
 func (s *Session) push(message *Message) error {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
+
+	if s.messages == nil {
+		return nil
+	}
 
 	s.messages = append(s.messages, message)
 	return nil
@@ -103,13 +140,17 @@ func (s *Session) prompt() string {
 			break
 		}
 
+		if len(s.proem)+len(text)+len(message.author)+len(message.text) > 2000 {
+			break
+		}
+
 		text = fmt.Sprintf("%s: %s\n%s", message.author, message.text, text)
 	}
 	return s.proem + text
 }
 
 func (s *Session) process(prompt string) {
-	reply, err := RequestChatGPT(prompt)
+	reply, err := RequestChatGPT(s.model, prompt)
 	if err != nil {
 		SendTextMessage(s.openid, err.Error())
 		return
