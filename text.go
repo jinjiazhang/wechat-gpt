@@ -13,6 +13,11 @@ func TextMessage(openid string, text string) (string, error) {
 	if text[0] == '#' {
 		return CommandMessage(openid, text)
 	}
+
+	if openid == "Admin" {
+		return AdminMessage(openid, text)
+	}
+
 	return ChatMessage(openid, text)
 }
 
@@ -42,4 +47,9 @@ func ChatMessage(openid string, text string) (string, error) {
 	session := GetSession(openid)
 	session.Chat(text)
 	return "", nil
+}
+
+func AdminMessage(openid string, text string) (string, error) {
+	session := GetSession(openid)
+	return session.Ask(text)
 }

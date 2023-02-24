@@ -39,6 +39,26 @@ func GetSession(openid string) *Session {
 	return session
 }
 
+func (s *Session) Ask(text string) (string, error) {
+	s.push(&Message{
+		author: "Human",
+		text:   text,
+		time:   time.Now().Unix(),
+	})
+
+	reply, err := RequestChatGPT(s.prompt())
+	if err != nil {
+		return "", err
+	}
+
+	s.push(&Message{
+		author: "AI",
+		text:   reply,
+		time:   time.Now().Unix(),
+	})
+	return reply, nil
+}
+
 func (s *Session) Chat(text string) error {
 	s.push(&Message{
 		author: "Human",
@@ -85,7 +105,7 @@ func (s *Session) prompt() string {
 }
 
 func (s *Session) process(prompt string) {
-	reply, err := RequestChatGPT(s.prompt())
+	reply, err := RequestChatGPT(prompt)
 	if err != nil {
 		SendTextMessage(s.openid, err.Error())
 		return
