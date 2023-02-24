@@ -19,6 +19,9 @@ type Message struct {
 
 type Session struct {
 	openid   string
+	name     string
+	proem    string
+	friend   string
 	messages []*Message
 	mutex    sync.Mutex
 }
@@ -31,17 +34,16 @@ func GetSession(openid string) *Session {
 		return session
 	}
 
-	session := &Session{
-		openid:   openid,
-		messages: make([]*Message, 0),
-	}
+	session := &Session{openid: openid}
+	session.Reset()
+
 	sessionMap[openid] = session
 	return session
 }
 
 func (s *Session) Ask(text string) (string, error) {
 	s.push(&Message{
-		author: "Human",
+		author: s.name,
 		text:   text,
 		time:   time.Now().Unix(),
 	})
@@ -52,7 +54,7 @@ func (s *Session) Ask(text string) (string, error) {
 	}
 
 	s.push(&Message{
-		author: "AI",
+		author: s.friend,
 		text:   reply,
 		time:   time.Now().Unix(),
 	})
@@ -61,7 +63,7 @@ func (s *Session) Ask(text string) (string, error) {
 
 func (s *Session) Chat(text string) error {
 	s.push(&Message{
-		author: "Human",
+		author: s.name,
 		text:   text,
 		time:   time.Now().Unix(),
 	})
@@ -74,6 +76,9 @@ func (s *Session) Reset() error {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
+	s.name = "Human"
+	s.friend = "AI"
+	s.proem = "The following is a conversation with an AI assistant. The assistant is helpful, creative, clever, and very friendly.\n\n"
 	s.messages = make([]*Message, 0)
 	return nil
 }
@@ -90,8 +95,7 @@ func (s *Session) prompt() string {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
-	head := "The following is a conversation with an AI assistant. The assistant is helpful, creative, clever, and very friendly.\n\n"
-	text := "AI:"
+	text := fmt.Sprintf("%s:", s.friend)
 	size := len(s.messages)
 	for i := 0; i < size; i++ {
 		message := s.messages[size-i-1]
@@ -101,7 +105,7 @@ func (s *Session) prompt() string {
 
 		text = fmt.Sprintf("%s: %s\n%s", message.author, message.text, text)
 	}
-	return head + text
+	return s.proem + text
 }
 
 func (s *Session) process(prompt string) {
@@ -112,7 +116,7 @@ func (s *Session) process(prompt string) {
 	}
 
 	s.push(&Message{
-		author: "AI",
+		author: s.friend,
 		text:   reply,
 		time:   time.Now().Unix(),
 	})
