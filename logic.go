@@ -37,7 +37,7 @@ func WeChatEvent(ctx context.Context, req *MessageReq) (*MessageRsp, error) {
 		CreateTime:   time.Now().Unix(),
 		MsgType:      kMsgTypeText,
 		TextData: TextData{
-			Content: UsageText(),
+			Content: "I'm the AI assistant make by Jinjiazh, Let's start our conversation!",
 		},
 	}
 	return rsp, nil

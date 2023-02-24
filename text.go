@@ -6,7 +6,7 @@ import (
 )
 
 func UsageText() string {
-	return "welcome"
+	return "#reset: reset your conversation"
 }
 
 func TextMessage(openid string, text string) (string, error) {
@@ -24,9 +24,9 @@ func TextMessage(openid string, text string) (string, error) {
 func CommandMessage(openid string, text string) (string, error) {
 	args := strings.Split(text, " ")
 	switch args[0] {
-	case "help":
+	case "#help":
 		return HelpCommand(openid, text)
-	case "reset":
+	case "#reset":
 		return ResetCommand(openid, text)
 	default:
 		return "", fmt.Errorf("Unknow Command: %s", args[0])
