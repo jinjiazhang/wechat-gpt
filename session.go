@@ -87,7 +87,7 @@ func (s *Session) prompt() string {
 func (s *Session) process(prompt string) {
 	reply, err := RequestChatGPT(s.prompt())
 	if err != nil {
-		NotifyUser(s.openid, err.Error())
+		SendTextMessage(s.openid, err.Error())
 		return
 	}
 
@@ -96,5 +96,5 @@ func (s *Session) process(prompt string) {
 		text:   reply,
 		time:   time.Now().Unix(),
 	})
-	NotifyUser(s.openid, reply)
+	SendTextMessage(s.openid, reply)
 }

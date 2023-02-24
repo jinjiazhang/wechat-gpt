@@ -16,9 +16,15 @@ import (
 
 func main() {
 	apiKey := flag.String("key", "sk-***", "chatgpt api-key")
+	token := flag.String("token", "jinjiazh", "wechat message token")
+	appId := flag.String("appid", "wxf963***", "wechat appid")
+	appSecret := flag.String("secret", "bf8fd***", "wechat app secret")
 	flag.Parse()
 
-	API_KEY = *apiKey
+	OPENAI_API_KEY = *apiKey
+	WECHAT_TOKEN = *token
+	WECHAT_APPID = *appId
+	WECHAT_APPSECRET = *appSecret
 	http.HandleFunc("/message", HandleMessage)
 	http.ListenAndServe(":8080", nil)
 }
@@ -36,13 +42,12 @@ func HandleMessage_GET(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("url: %s", r.URL.String())
 	query := r.URL.Query()
 
-	token := "jinjiazh"
 	signature := query.Get("signature")
 	timestamp := query.Get("timestamp")
 	nonce := query.Get("nonce")
 	echostr := query.Get("echostr")
 
-	sl := []string{token, timestamp, nonce}
+	sl := []string{WECHAT_TOKEN, timestamp, nonce}
 	sort.Strings(sl)
 	sum := sha1.Sum([]byte(sl[0] + sl[1] + sl[2]))
 	if signature == hex.EncodeToString(sum[:]) {
