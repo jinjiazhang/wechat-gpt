@@ -28,7 +28,7 @@ func TextMessage(openid string, text string) (string, error) {
 
 func CommandMessage(openid string, text string) (string, error) {
 	args := strings.Split(text, " ")
-	text = text[len(args)+1:]
+	text = text[len(args[0])+1:]
 	switch args[0] {
 	case "-help":
 		return HelpCommand(openid, text)
