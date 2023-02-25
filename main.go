@@ -21,6 +21,7 @@ func main() {
 	appId := flag.String("appid", "wxf963***", "wechat appid")
 	appSecret := flag.String("secret", "bf8fd***", "wechat app secret")
 	flag.Parse()
+	setupLogs()
 
 	OPENAI_API_KEY = *apiKey
 	WECHAT_TOKEN = *token
