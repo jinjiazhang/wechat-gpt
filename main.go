@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"sort"
 
 	log "github.com/sirupsen/logrus"
@@ -27,6 +28,18 @@ func main() {
 	WECHAT_APPSECRET = *appSecret
 	http.HandleFunc("/message", HandleMessage)
 	http.ListenAndServe(":8080", nil)
+}
+
+func setupLogs() {
+	file, err := os.OpenFile("wechat-gpt.log", os.O_CREATE|os.O_WRONLY, 0666)
+	if err != nil {
+		log.Printf("setupLogs fail, err: %+v", err)
+		return
+	}
+
+	formatter := &LogFormatter{}
+	log.SetFormatter(formatter)
+	log.SetOutput(file)
 }
 
 func HandleMessage(w http.ResponseWriter, r *http.Request) {

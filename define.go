@@ -22,12 +22,12 @@ type EventData struct {
 }
 
 type TextData struct {
-	Content string `xml:"Content"`
+	Content string `xml:"Content" json:"content"`
 }
 
 type ImageData struct {
-	PicUrl  string `xml:"PicUrl"`
-	MediaId string `xml:"MediaId"`
+	PicUrl  string `xml:"PicUrl" json:"pic_url"`
+	MediaId string `xml:"MediaId" json:"media_id"`
 }
 
 type MessageReq struct {
