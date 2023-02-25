@@ -87,7 +87,7 @@ func reqAccessToken() (string, error) {
 	}
 
 	accessToken = rsp.AccessToken
-	expiresTime = rsp.ExpiresTime
+	expiresTime = time.Now().Unix() + rsp.ExpiresTime - 600
 	return accessToken, nil
 }
 
