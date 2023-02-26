@@ -92,13 +92,13 @@ func (s *Session) Reset(mode string) error {
 		s.model = "text-davinci-003"
 		s.name = "You"
 		s.friend = "Friend"
-		s.proem = ""
+		s.proem = "You are chatting with your base friend.\n\n"
 	case "Q", "QA":
 		s.mode = "Q&A"
 		s.model = "text-davinci-003"
 		s.name = "Q"
 		s.friend = "A"
-		s.proem = "I am a highly intelligent question answering bot. If you ask me a question that is rooted in truth, I will give you the answer. If you ask me a question that is nonsense, trickery, or has no clear answer, I will respond with \"Unknown\".\n\n"
+		s.proem = "I am a highly intelligent question answering bot. If you ask me a question that is rooted in truth, I will give you the answer. If you ask me a question that is nonsense, trickery, or has no clear answer, I will respond with \"Sorry\".\n\n"
 	case "F", "FUNNY":
 		s.mode = "FUNNY"
 		s.model = "text-davinci-003"
