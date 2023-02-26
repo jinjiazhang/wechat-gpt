@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 )
@@ -77,40 +78,33 @@ func (s *Session) Chat(text string) error {
 func (s *Session) Reset(mode string) error {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
-	s.messages = make([]*Message, 0)
 
-	switch mode {
-	case "c", "Chat":
-		s.mode = "Chat"
-		s.model = "text-davinci-003"
-		s.name = "You"
-		s.friend = "Friend"
-		s.proem = ""
-	case "f", "Funny":
-		s.mode = "Marv"
-		s.model = "text-davinci-003"
-		s.name = "You"
-		s.friend = "Marv"
-		s.proem = "Marv is a chatbot that reluctantly answers questions with humorous responses:\n\n"
-	case "k", "Keywords":
-		s.mode = "Keywords"
-		s.model = "text-davinci-003"
-		s.name = ""
-		s.friend = ""
-		s.proem = "Extract keywords from this text:\n\n"
-		s.messages = nil
-	case "q", "Q&A":
-		s.mode = "Q&A"
-		s.model = "text-davinci-003"
-		s.name = "Q"
-		s.friend = "A"
-		s.proem = "I am a highly intelligent question answering bot. If you ask me a question that is rooted in truth, I will give you the answer. If you ask me a question that is nonsense, trickery, or has no clear answer, I will respond with \"Unknown\".\n\n"
-	default:
+	s.messages = make([]*Message, 0)
+	switch strings.ToUpper(mode) {
+	case "A", "AI":
 		s.mode = "AI assistant"
 		s.model = "text-davinci-003"
 		s.name = "Human"
 		s.friend = "AI"
 		s.proem = "The following is a conversation with an AI assistant. The assistant is helpful, creative, clever, and very friendly.\n\n"
+	case "C", "CHAT":
+		s.mode = "Chat"
+		s.model = "text-davinci-003"
+		s.name = "You"
+		s.friend = "Friend"
+		s.proem = ""
+	case "Q", "QA":
+		s.mode = "Q&A"
+		s.model = "text-davinci-003"
+		s.name = "Q"
+		s.friend = "A"
+		s.proem = "I am a highly intelligent question answering bot. If you ask me a question that is rooted in truth, I will give you the answer. If you ask me a question that is nonsense, trickery, or has no clear answer, I will respond with \"Unknown\".\n\n"
+	case "F", "FUNNY":
+		s.mode = "FUNNY"
+		s.model = "text-davinci-003"
+		s.name = "You"
+		s.friend = "Marv"
+		s.proem = "Marv is a chatbot that reluctantly answers questions with humorous responses:\n\n"
 	}
 
 	return nil

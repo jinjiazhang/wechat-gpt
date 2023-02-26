@@ -31,13 +31,19 @@ func WeChatMessage(ctx context.Context, req *MessageReq) (*MessageRsp, error) {
 }
 
 func WeChatEvent(ctx context.Context, req *MessageReq) (*MessageRsp, error) {
+	reply, err := EventMessage(req.FromUserName, req.Event, req.EventKey)
+	if err != nil {
+		log.Errorf("TextMessage err: %+v", err)
+		reply = fmt.Sprintf("TextMessage err: %+v", err)
+	}
+
 	rsp := &MessageRsp{
 		ToUserName:   req.FromUserName,
 		FromUserName: req.ToUserName,
 		CreateTime:   time.Now().Unix(),
 		MsgType:      kMsgTypeText,
 		TextData: TextData{
-			Content: "I'm the AI assistant make by Jinjiazh, Let's start our conversation!",
+			Content: reply,
 		},
 	}
 	return rsp, nil

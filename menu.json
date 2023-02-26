@@ -1,0 +1,49 @@
+{
+    "button": [
+        {
+            "name": "文字功能",
+            "sub_button": [
+                {
+                    "type": "click",
+                    "name": "AI助理",
+                    "key": "TEXT_AI"
+                },
+                {
+                    "type": "click",
+                    "name": "聊天模式",
+                    "key": "TEXT_CHAT"
+                },
+                {
+                    "type": "click",
+                    "name": "问答模式",
+                    "key": "TEXT_QA"
+                },
+                {
+                    "type": "click",
+                    "name": "玩笑模式",
+                    "key": "TEXT_FUNNY"
+                },
+                {
+                    "type": "click",
+                    "name": "重置对话",
+                    "key": "TEXT_RESET"
+                }
+            ]
+        },
+        {
+            "name": "图片功能",
+            "sub_button": [
+                {
+                    "type": "click",
+                    "name": "DALL-E",
+                    "key": "IMAGE_DAllE"
+                }
+            ]
+        },
+        {
+            "type": "click",
+            "name": "说明",
+            "key": "BUTTON_ABOUT"
+        }
+    ]
+}
