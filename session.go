@@ -38,7 +38,7 @@ func GetSession(openid string) *Session {
 	}
 
 	session := &Session{openid: openid}
-	session.Reset("")
+	session.Reset("AI")
 
 	sessionMap[openid] = session
 	return session
