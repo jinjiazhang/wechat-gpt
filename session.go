@@ -16,7 +16,6 @@ type Session struct {
 	openid   string
 	mode     string
 	model    string
-	prologue string
 	messages []*ChatGPTMessage
 	mutex    sync.Mutex
 }
@@ -33,7 +32,6 @@ func GetSession(openid string) *Session {
 		openid:   openid,
 		mode:     "AI",
 		model:    "gpt-3.5-turbo",
-		prologue: "You are a helpful assistant.",
 		messages: make([]*ChatGPTMessage, 0),
 	}
 
@@ -161,7 +159,7 @@ func (s *Session) prompt() []*ChatGPTMessage {
 			break
 		}
 
-		tokenCount += len([]rune(message.Content))
+		tokenCount += int(message.TokenNum)
 		if tokenCount > 2048 {
 			break
 		}
@@ -170,14 +168,12 @@ func (s *Session) prompt() []*ChatGPTMessage {
 		messages = append([]*ChatGPTMessage{message}, messages...)
 	}
 
-	if s.prologue != "" {
-		message := &ChatGPTMessage{
-			Role:    "system",
-			Content: s.prologue,
-			Time:    lastTime,
-		}
-		messages = append([]*ChatGPTMessage{message}, messages...)
+	message := &ChatGPTMessage{
+		Role:     "system",
+		Content:  "You are a helpful assistant.",
+		TokenNum: 13,
+		Time:     lastTime,
 	}
-
+	messages = append([]*ChatGPTMessage{message}, messages...)
 	return messages
 }
