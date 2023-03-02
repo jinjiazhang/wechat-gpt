@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strings"
 	"time"
 
 	"golang.org/x/sync/singleflight"
@@ -91,8 +92,7 @@ func reqAccessToken() (string, error) {
 	return accessToken, nil
 }
 
-func SendTextMessage(openid string, text string) error {
-	log.Infof("SendTextMessage openid: %s, text: %s", openid, text)
+func sendTextMessage(openid string, text string) error {
 	req := &WxNotifyRequest{
 		ToUser:  openid,
 		MsgType: kMsgTypeText,
@@ -139,6 +139,29 @@ func SendTextMessage(openid string, text string) error {
 	if rsp.ErrCode != 0 {
 		log.Errorf("SendTextMessage fail, code: %d, msg: %s", rsp.ErrCode, rsp.ErrMsg)
 		return fmt.Errorf("code: %d, msg: %s", rsp.ErrCode, rsp.ErrMsg)
+	}
+
+	return nil
+}
+
+func SendTextMessage(openid string, text string) error {
+	log.Infof("SendTextMessage openid: %s, text: %s", openid, text)
+	segments := strings.Split(text, "\n\n")
+	for _, segment := range segments {
+		if segment == "" {
+			continue
+		}
+
+		content := []rune(segment)
+		for {
+			if len(content) < 256 {
+				sendTextMessage(openid, string(content))
+				break
+			}
+
+			sendTextMessage(openid, string(content[:256]))
+			content = content[256:]
+		}
 	}
 
 	return nil

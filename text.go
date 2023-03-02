@@ -1,6 +1,9 @@
 package main
 
+import log "github.com/sirupsen/logrus"
+
 func TextMessage(openid string, text string) (string, error) {
+	log.Infof("RecvTextMessage openid: %s, text: %s", openid, text)
 	if text[0] == '-' {
 		return CommandMessage(openid, text)
 	}
@@ -28,7 +31,7 @@ func EventMessage(openid string, event string, eventKey string) (string, error) 
 	case "CLICK":
 		return MenuCommand(openid, eventKey)
 	default:
-		return "I'm the AI assistant make by Jinjiazh, Let's start our conversation!", nil
+		return "有什么可以帮助你吗", nil
 	}
 }
 
@@ -37,7 +40,7 @@ func MenuCommand(openid string, menuKey string) (string, error) {
 	switch menuKey {
 	case "TEXT_AI":
 		session.Reset("AI")
-		return "有什么可以帮助你呢", nil
+		return "有什么可以帮助你吗", nil
 	case "TEXT_TRANSLATE":
 		session.Reset("Translate")
 		return "请输入需要翻译的内容", nil

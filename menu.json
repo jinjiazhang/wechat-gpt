@@ -10,18 +10,8 @@
                 },
                 {
                     "type": "click",
-                    "name": "聊天模式",
-                    "key": "TEXT_CHAT"
-                },
-                {
-                    "type": "click",
-                    "name": "问答模式",
-                    "key": "TEXT_QA"
-                },
-                {
-                    "type": "click",
-                    "name": "玩笑模式",
-                    "key": "TEXT_FUNNY"
+                    "name": "中英互译",
+                    "key": "TEXT_TRANSLATE"
                 },
                 {
                     "type": "click",
