@@ -161,7 +161,7 @@ func (s *Session) prompt() []*ChatGPTMessage {
 			break
 		}
 
-		tokenCount += len(message.Content)
+		tokenCount += len([]rune(message.Content))
 		if tokenCount > 2048 {
 			break
 		}
