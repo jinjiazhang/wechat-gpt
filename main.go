@@ -16,6 +16,7 @@ import (
 )
 
 func main() {
+	port := flag.Int("port", 8080, "server listen port")
 	apiKey := flag.String("key", "sk-***", "chatgpt api-key")
 	token := flag.String("token", "jinjiazh", "wechat message token")
 	appId := flag.String("appid", "wxf963***", "wechat appid")
@@ -28,7 +29,7 @@ func main() {
 	WECHAT_APPID = *appId
 	WECHAT_APPSECRET = *appSecret
 	http.HandleFunc("/message", HandleMessage)
-	http.ListenAndServe(":8080", nil)
+	http.ListenAndServe(fmt.Sprintf(":%d", *port), nil)
 }
 
 func setupLogs() {
