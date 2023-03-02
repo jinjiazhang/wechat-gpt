@@ -17,13 +17,13 @@ func TextMessage(openid string, text string) (string, error) {
 
 func ChatMessage(openid string, text string) (string, error) {
 	session := GetSession(openid)
-	session.Chat(text)
+	session.Process(text)
 	return "", nil
 }
 
 func AdminMessage(openid string, text string) (string, error) {
 	session := GetSession(openid)
-	return session.Ask(text)
+	return session.SyncAsk(text)
 }
 
 func EventMessage(openid string, event string, eventKey string) (string, error) {

@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+	"regexp"
 	"sync"
 	"time"
 )
@@ -27,14 +29,19 @@ func GetSession(openid string) *Session {
 		return session
 	}
 
-	session := &Session{openid: openid}
-	session.Reset("AI")
+	session := &Session{
+		openid:   openid,
+		mode:     "AI",
+		model:    "gpt-3.5-turbo",
+		prologue: "You are a helpful assistant.",
+		messages: make([]*ChatGPTMessage, 0),
+	}
 
 	sessionMap[openid] = session
 	return session
 }
 
-func (s *Session) Ask(text string) (string, error) {
+func (s *Session) SyncAsk(text string) (string, error) {
 	s.push(&ChatGPTMessage{
 		Role:    "user",
 		Content: text,
@@ -54,30 +61,62 @@ func (s *Session) Ask(text string) (string, error) {
 	return reply, nil
 }
 
-func (s *Session) Chat(text string) error {
+func (s *Session) AsyncAsk(text string) error {
 	s.push(&ChatGPTMessage{
 		Role:    "user",
 		Content: text,
 		Time:    time.Now().Unix(),
 	})
 
-	go s.process(s.prompt())
+	go func() {
+		reply, err := RequestChatGPT(s.model, s.prompt())
+		if err != nil {
+			SendTextMessage(s.openid, err.Error())
+			return
+		}
+
+		s.push(&ChatGPTMessage{
+			Role:    "assistant",
+			Content: reply,
+			Time:    time.Now().Unix(),
+		})
+		SendTextMessage(s.openid, reply)
+	}()
 	return nil
 }
 
-func (s *Session) process(messages []*ChatGPTMessage) {
-	reply, err := RequestChatGPT(s.model, messages)
-	if err != nil {
-		SendTextMessage(s.openid, err.Error())
-		return
+func (s *Session) Translate(text string) error {
+	result, _ := regexp.MatchString(`[\x{4e00}-\x{9fa5}]+`, text)
+	format := "Translate the following English text to Chinese:\"%s\""
+	if result {
+		format = "Translate the following Chinese text to English:\"%s\""
 	}
 
-	s.push(&ChatGPTMessage{
-		Role:    "assistant",
-		Content: reply,
+	message := &ChatGPTMessage{
+		Role:    "user",
+		Content: fmt.Sprintf(format, text),
 		Time:    time.Now().Unix(),
-	})
-	SendTextMessage(s.openid, reply)
+	}
+
+	go func() {
+		reply, err := RequestChatGPT(s.model, []*ChatGPTMessage{message})
+		if err != nil {
+			SendTextMessage(s.openid, err.Error())
+			return
+		}
+
+		SendTextMessage(s.openid, reply)
+	}()
+	return nil
+}
+
+func (s *Session) Process(text string) error {
+	switch s.mode {
+	case "t", "Translate":
+		return s.Translate(text)
+	default:
+		return s.AsyncAsk(text)
+	}
 }
 
 func (s *Session) Reset(mode string) error {
@@ -87,14 +126,10 @@ func (s *Session) Reset(mode string) error {
 	}
 
 	switch mode {
-	case "a", "A", "AI":
+	case "a", "AI":
 		s.mode = "AI"
-		s.model = "gpt-3.5-turbo"
-		s.prologue = "You are a helpful assistant."
-	case "t", "T", "Translate":
+	case "t", "Translate":
 		s.mode = "Translate"
-		s.model = "gpt-3.5-turbo"
-		s.prologue = "You are a helpful assistant that mutual translation between Chinese and English."
 	}
 	return nil
 }
