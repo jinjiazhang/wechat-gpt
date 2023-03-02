@@ -6,12 +6,8 @@ import (
 )
 
 func UsageText() string {
-	return "-reset: reset your conversation\n" +
-		"\tc: Chat, f: Funny, k: Keywords, q: Q&A\n" +
-		"-model: set openai model\n" +
-		"-name: set your name\n" +
-		"-friend: set friend's name\n" +
-		"-proem: set conversation proem\n"
+	return "usage: [-help] [-reset <mode>]\n" +
+		"-reset\treset conversation history"
 }
 
 func CommandMessage(openid string, text string) (string, error) {
@@ -25,8 +21,6 @@ func CommandMessage(openid string, text string) (string, error) {
 		return HelpCommand(openid, text)
 	case "-reset":
 		return ResetCommand(openid, text)
-	case "-model":
-		return ModelCommand(openid, text)
 	default:
 		return "", fmt.Errorf("Unknow Command: %s", args[0])
 	}
@@ -40,10 +34,4 @@ func ResetCommand(openid string, text string) (string, error) {
 	session := GetSession(openid)
 	session.Reset(text)
 	return "reset mode: " + session.mode, nil
-}
-
-func ModelCommand(openid string, text string) (string, error) {
-	session := GetSession(openid)
-	session.model = text
-	return "set model: " + text, nil
 }
