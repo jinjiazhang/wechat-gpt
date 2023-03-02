@@ -12,9 +12,10 @@ import (
 )
 
 type ChatGPTMessage struct {
-	Role    string `json:"role"`
-	Content string `json:"content"`
-	Time    int64  `json:"-"`
+	Role     string `json:"role"`
+	Content  string `json:"content"`
+	TokenNum int32  `json:"-"`
+	Time     int64  `json:"-"`
 }
 
 type ChatGPTRequest struct {
@@ -28,12 +29,12 @@ type ChatGPTRequest struct {
 }
 
 type ChatGPTResponse struct {
-	Error   ChatGPTError           `json:"error"`
-	ID      string                 `json:"id"`
-	Object  string                 `json:"object"`
-	Created int                    `json:"created"`
-	Choices []ChoiceItem           `json:"choices"`
-	Usage   map[string]interface{} `json:"usage"`
+	Error   ChatGPTError    `json:"error"`
+	ID      string          `json:"id"`
+	Object  string          `json:"object"`
+	Created int             `json:"created"`
+	Usage   ChatGPTUsage    `json:"usage"`
+	Choices []ChatGPTChoice `json:"choices"`
 }
 
 type ChatGPTError struct {
@@ -41,10 +42,16 @@ type ChatGPTError struct {
 	Type    string `json:"type"`
 }
 
-type ChoiceItem struct {
+type ChatGPTChoice struct {
 	Index        int             `json:"index"`
 	FinishReason string          `json:"finish_reason"`
 	Message      *ChatGPTMessage `json:"message"`
+}
+
+type ChatGPTUsage struct {
+	PromptTokens     int `json:"prompt_tokens"`
+	CompletionTokens int `json:"completion_tokens"`
+	TotalTokens      int `json:"total_tokens"`
 }
 
 // curl https://api.openai.com/v1/chat/completions \

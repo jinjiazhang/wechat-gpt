@@ -122,7 +122,7 @@ func (s *Session) prompt() []*ChatGPTMessage {
 
 	for i := 0; i < totalSize; i++ {
 		message := s.messages[totalSize-i-1]
-		if lastTime-message.Time > 300 {
+		if lastTime-message.Time > 600 {
 			break
 		}
 
