@@ -11,46 +11,53 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+type ChatGPTMessage struct {
+	Role    string `json:"role"`
+	Content string `json:"content"`
+	Time    int64  `json:"-"`
+}
+
 type ChatGPTRequest struct {
-	Model            string  `json:"model"`
-	Prompt           string  `json:"prompt"`
-	MaxTokens        uint    `json:"max_tokens"`
-	Temperature      float64 `json:"temperature"`
-	TopP             int     `json:"top_p"`
-	FrequencyPenalty int     `json:"frequency_penalty"`
-	PresencePenalty  int     `json:"presence_penalty"`
+	Model            string            `json:"model"`
+	Messages         []*ChatGPTMessage `json:"messages"`
+	MaxTokens        uint              `json:"max_tokens"`
+	Temperature      float64           `json:"temperature"`
+	TopP             int               `json:"top_p"`
+	FrequencyPenalty int               `json:"frequency_penalty"`
+	PresencePenalty  int               `json:"presence_penalty"`
 }
 
 type ChatGPTResponse struct {
-	Error   ErrorItem              `json:"error"`
+	Error   ChatGPTError           `json:"error"`
 	ID      string                 `json:"id"`
 	Object  string                 `json:"object"`
 	Created int                    `json:"created"`
-	Model   string                 `json:"model"`
 	Choices []ChoiceItem           `json:"choices"`
 	Usage   map[string]interface{} `json:"usage"`
 }
 
-type ErrorItem struct {
+type ChatGPTError struct {
 	Message string `json:"message"`
 	Type    string `json:"type"`
 }
 
 type ChoiceItem struct {
-	Text         string `json:"text"`
-	Index        int    `json:"index"`
-	Logprobs     int    `json:"logprobs"`
-	FinishReason string `json:"finish_reason"`
+	Index        int             `json:"index"`
+	FinishReason string          `json:"finish_reason"`
+	Message      *ChatGPTMessage `json:"message"`
 }
 
-// curl https://api.openai.com/v1/completions
-// -H "Content-Type: application/json"
-// -H "Authorization: Bearer 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"
-// -d '{"model": "text-davinci-003", "prompt": "地球为什么绕太阳转", "temperature": 0, "max_tokens": 2048}'
-func RequestChatGPT(model string, prompt string) (string, error) {
+// curl https://api.openai.com/v1/chat/completions \
+//   -H 'Content-Type: application/json' \
+//   -H 'Authorization: Bearer YOUR_API_KEY' \
+//   -d '{
+//   "model": "gpt-3.5-turbo",
+//   "messages": [{"role": "user", "content": "Hello!"}]
+// }'
+func RequestChatGPT(model string, messages []*ChatGPTMessage) (string, error) {
 	req := ChatGPTRequest{
 		Model:            model,
-		Prompt:           prompt,
+		Messages:         messages,
 		MaxTokens:        2048,
 		Temperature:      0.8,
 		TopP:             1,
@@ -63,7 +70,7 @@ func RequestChatGPT(model string, prompt string) (string, error) {
 		return "", err
 	}
 
-	url := "https://api.openai.com/v1/completions"
+	url := "https://api.openai.com/v1/chat/completions"
 	request, err := http.NewRequest("POST", url, bytes.NewBuffer(reqBody))
 	if err != nil {
 		return "", err
@@ -101,7 +108,7 @@ func RequestChatGPT(model string, prompt string) (string, error) {
 
 	var reply string
 	if len(rsp.Choices) > 0 {
-		reply = rsp.Choices[0].Text
+		reply = rsp.Choices[0].Message.Content
 	}
 	return reply, nil
 }

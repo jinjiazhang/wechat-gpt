@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-	"strings"
 	"sync"
 	"time"
 )
@@ -12,20 +10,12 @@ var (
 	mapMutex   sync.Mutex
 )
 
-type Message struct {
-	author string
-	text   string
-	time   int64
-}
-
 type Session struct {
 	openid   string
-	name     string
-	proem    string
-	friend   string
-	model    string
 	mode     string
-	messages []*Message
+	model    string
+	prologue string
+	messages []*ChatGPTMessage
 	mutex    sync.Mutex
 }
 
@@ -45,10 +35,10 @@ func GetSession(openid string) *Session {
 }
 
 func (s *Session) Ask(text string) (string, error) {
-	s.push(&Message{
-		author: s.name,
-		text:   text,
-		time:   time.Now().Unix(),
+	s.push(&ChatGPTMessage{
+		Role:    "user",
+		Content: text,
+		Time:    time.Now().Unix(),
 	})
 
 	reply, err := RequestChatGPT(s.model, s.prompt())
@@ -56,61 +46,60 @@ func (s *Session) Ask(text string) (string, error) {
 		return "", err
 	}
 
-	s.push(&Message{
-		author: s.friend,
-		text:   reply,
-		time:   time.Now().Unix(),
+	s.push(&ChatGPTMessage{
+		Role:    "assistant",
+		Content: reply,
+		Time:    time.Now().Unix(),
 	})
 	return reply, nil
 }
 
 func (s *Session) Chat(text string) error {
-	s.push(&Message{
-		author: s.name,
-		text:   text,
-		time:   time.Now().Unix(),
+	s.push(&ChatGPTMessage{
+		Role:    "user",
+		Content: text,
+		Time:    time.Now().Unix(),
 	})
 
 	go s.process(s.prompt())
 	return nil
 }
 
-func (s *Session) Reset(mode string) error {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
-
-	s.messages = make([]*Message, 0)
-	switch strings.ToUpper(mode) {
-	case "A", "AI":
-		s.mode = "AI assistant"
-		s.model = "text-davinci-003"
-		s.name = "Human"
-		s.friend = "AI"
-		s.proem = "The following is a conversation with an AI assistant. The assistant is helpful, creative, clever, and very friendly.\n\n"
-	case "C", "CHAT":
-		s.mode = "Chat"
-		s.model = "text-davinci-003"
-		s.name = "You"
-		s.friend = "Friend"
-		s.proem = "You are chatting with your base friend.\n\n"
-	case "Q", "QA":
-		s.mode = "Q&A"
-		s.model = "text-davinci-003"
-		s.name = "Q"
-		s.friend = "A"
-		s.proem = "I am a highly intelligent question answering bot. If you ask me a question that is rooted in truth, I will give you the answer. If you ask me a question that is nonsense, trickery, or has no clear answer, I will respond with \"Sorry\".\n\n"
-	case "F", "FUNNY":
-		s.mode = "FUNNY"
-		s.model = "text-davinci-003"
-		s.name = "You"
-		s.friend = "Marv"
-		s.proem = "Marv is a chatbot that reluctantly answers questions with humorous responses:\n\n"
+func (s *Session) process(messages []*ChatGPTMessage) {
+	reply, err := RequestChatGPT(s.model, messages)
+	if err != nil {
+		SendTextMessage(s.openid, err.Error())
+		return
 	}
 
+	s.push(&ChatGPTMessage{
+		Role:    "assistant",
+		Content: reply,
+		Time:    time.Now().Unix(),
+	})
+	SendTextMessage(s.openid, reply)
+}
+
+func (s *Session) Reset(mode string) error {
+	s.messages = make([]*ChatGPTMessage, 0)
+	if mode == "" {
+		mode = s.mode
+	}
+
+	switch mode {
+	case "a", "A", "AI":
+		s.mode = "AI"
+		s.model = "gpt-3.5-turbo"
+		s.prologue = "You are a helpful assistant."
+	case "t", "T", "Translate":
+		s.mode = "Translate"
+		s.model = "gpt-3.5-turbo"
+		s.prologue = "You are a helpful assistant that mutual translation between Chinese and English."
+	}
 	return nil
 }
 
-func (s *Session) push(message *Message) error {
+func (s *Session) push(message *ChatGPTMessage) error {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
@@ -122,38 +111,38 @@ func (s *Session) push(message *Message) error {
 	return nil
 }
 
-func (s *Session) prompt() string {
+func (s *Session) prompt() []*ChatGPTMessage {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
-	text := fmt.Sprintf("%s:", s.friend)
-	size := len(s.messages)
-	for i := 0; i < size; i++ {
-		message := s.messages[size-i-1]
-		if time.Now().Unix()-message.time > 7200 {
+	totalSize := len(s.messages)
+	lastTime := time.Now().Unix()
+	messages := make([]*ChatGPTMessage, 0)
+	tokenCount := 0
+
+	for i := 0; i < totalSize; i++ {
+		message := s.messages[totalSize-i-1]
+		if lastTime-message.Time > 300 {
 			break
 		}
 
-		if len(s.proem)+len(text)+len(message.author)+len(message.text) > 2000 {
+		tokenCount += len(message.Content)
+		if tokenCount > 2048 {
 			break
 		}
 
-		text = fmt.Sprintf("%s: %s\n%s", message.author, message.text, text)
-	}
-	return s.proem + text
-}
-
-func (s *Session) process(prompt string) {
-	reply, err := RequestChatGPT(s.model, prompt)
-	if err != nil {
-		SendTextMessage(s.openid, err.Error())
-		return
+		lastTime = message.Time
+		messages = append([]*ChatGPTMessage{message}, messages...)
 	}
 
-	s.push(&Message{
-		author: s.friend,
-		text:   reply,
-		time:   time.Now().Unix(),
-	})
-	SendTextMessage(s.openid, reply)
+	if s.prologue != "" {
+		message := &ChatGPTMessage{
+			Role:    "system",
+			Content: s.prologue,
+			Time:    lastTime,
+		}
+		messages = append([]*ChatGPTMessage{message}, messages...)
+	}
+
+	return messages
 }

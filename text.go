@@ -37,14 +37,13 @@ func MenuCommand(openid string, menuKey string) (string, error) {
 	switch menuKey {
 	case "TEXT_AI":
 		session.Reset("AI")
-	case "TEXT_CHAT":
-		session.Reset("CHAT")
-	case "TEXT_QA":
-		session.Reset("QA")
-	case "TEXT_FUNNY":
-		session.Reset("FUNNY")
+		return "有什么可以帮助你呢", nil
+	case "TEXT_TRANSLATE":
+		session.Reset("Translate")
+		return "请输入需要翻译的内容", nil
 	case "TEXT_RESET":
 		session.Reset("")
+		return "对话已重置", nil
 	case "IMAGE_DAllE":
 		return "功能暂未开放", nil
 	case "BUTTON_ABOUT":
@@ -52,6 +51,4 @@ func MenuCommand(openid string, menuKey string) (string, error) {
 	default:
 		return "功能暂未开放", nil
 	}
-
-	return session.proem, nil
 }
