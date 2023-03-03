@@ -146,50 +146,51 @@ func sendTextMessage(openid string, text string) error {
 
 func SendTextMessage(openid string, text string) error {
 	log.Infof("SendTextMessage openid: %s, text: %s", openid, text)
-	segments := splitMessage(text, "\n\n", 256)
+	segments := splitMessage(text, "\n\n", 2048)
 	for _, segment := range segments {
 		if segment == "" {
 			continue
 		}
 
-		sendTextMessage(openid, segment)
+		err := sendTextMessage(openid, segment)
+		if err != nil {
+			sendTextMessage(openid, err.Error())
+		}
 	}
 
 	return nil
 }
 
 func splitMessage(text string, sep string, maxLen int) []string {
+	if len(text) < maxLen {
+		return []string{text}
+	}
+
 	parts := strings.Split(text, sep)
-	result := make([]string, 0, len(parts))
-
-	for i := 0; i < len(parts); i++ {
-		partLen := len([]rune(parts[i]))
-		if partLen < maxLen {
-			merges := []string{parts[i]}
-			for j := i + 1; j < len(parts); j++ {
-				nextLen := len([]rune(parts[j]))
-				if partLen+nextLen > maxLen {
-					break
+	result := make([]string, 0)
+	var temp string
+	for _, part := range parts {
+		if len(temp)+len(part) < maxLen {
+			if temp != "" {
+				temp += sep
+			}
+			temp += part
+		} else {
+			result = append(result, temp)
+			if len(part) > maxLen {
+				size := len(part) / maxLen
+				for i := 0; i < size; i++ {
+					result = append(result, part[i*maxLen:(i+1)*maxLen])
 				}
-
-				i++
-				partLen += nextLen
-				merges = append(merges, parts[j])
+				part = part[size*maxLen:]
 			}
 
-			result = append(result, strings.Join(merges, sep))
-			continue
-		}
-
-		segment := []rune(parts[i])
-		for k := 0; k < partLen; k += maxLen {
-			if k*(maxLen+1) < partLen {
-				result = append(result, string(segment[k:k+maxLen]))
-			} else {
-				result = append(result, string(segment[k:partLen]))
-			}
+			temp = part
 		}
 	}
 
+	if temp != "" {
+		result = append(result, temp)
+	}
 	return result
 }
