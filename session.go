@@ -31,7 +31,7 @@ func GetSession(openid string) *Session {
 	session := &Session{
 		openid:   openid,
 		mode:     "AI",
-		model:    "gpt-3.5-turbo",
+		model:    config.OpenAI.Model,
 		messages: make([]*ChatGPTMessage, 0),
 	}
 

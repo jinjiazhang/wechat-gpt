@@ -53,7 +53,7 @@ func getAccessToken() string {
 
 func reqAccessToken() (string, error) {
 	format := "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=%s&secret=%s"
-	url := fmt.Sprintf(format, WECHAT_APPID, WECHAT_APPSECRET)
+	url := fmt.Sprintf(format, config.Wechat.AppID, config.Wechat.AppSecret)
 	request, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		log.Errorf("GetAccessToken NewRequest fail, err: %+v", err)

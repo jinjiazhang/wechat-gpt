@@ -8,35 +8,40 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"sort"
 
 	log "github.com/sirupsen/logrus"
+	"gopkg.in/yaml.v3"
 )
 
 func main() {
-	port := flag.Int("port", 8080, "server listen port")
-	apiKey := flag.String("key", "sk-***", "chatgpt api-key")
-	token := flag.String("token", "jinjiazh", "wechat message token")
-	appId := flag.String("appid", "wxf963***", "wechat appid")
-	appSecret := flag.String("secret", "bf8fd***", "wechat app secret")
+	confPath := flag.String("conf", "wechat-gpt.yaml", "config file path")
 	flag.Parse()
-	setupLogs()
 
-	OPENAI_API_KEY = *apiKey
-	WECHAT_TOKEN = *token
-	WECHAT_APPID = *appId
-	WECHAT_APPSECRET = *appSecret
+	content, err := ioutil.ReadFile(*confPath)
+	if err != nil {
+		log.Fatalf("read config file fail, err: %+v", err)
+	}
+
+	err = yaml.Unmarshal(content, &config)
+	if err != nil {
+		log.Fatalf("unmarshal config file fail, err: %+v", err)
+	}
+
+	log.Printf("load config: %+v", config)
+
+	setupLogs()
 	http.HandleFunc("/message", HandleMessage)
-	http.ListenAndServe(fmt.Sprintf(":%d", *port), nil)
+	http.ListenAndServe(fmt.Sprintf(":%d", config.App.Port), nil)
 }
 
 func setupLogs() {
-	file, err := os.OpenFile("wechat-gpt.log", os.O_CREATE|os.O_WRONLY, 0666)
+	file, err := os.OpenFile(config.App.LogFile, os.O_CREATE|os.O_WRONLY, 0666)
 	if err != nil {
-		log.Printf("setupLogs fail, err: %+v", err)
-		return
+		log.Fatalf("setupLogs fail, err: %+v", err)
 	}
 
 	formatter := &LogFormatter{}
@@ -64,7 +69,7 @@ func HandleMessage_GET(w http.ResponseWriter, r *http.Request) {
 	nonce := query.Get("nonce")
 	echostr := query.Get("echostr")
 
-	sl := []string{WECHAT_TOKEN, timestamp, nonce}
+	sl := []string{config.Wechat.Token, timestamp, nonce}
 	sort.Strings(sl)
 	sum := sha1.Sum([]byte(sl[0] + sl[1] + sl[2]))
 	if signature == hex.EncodeToString(sum[:]) {

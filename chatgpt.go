@@ -84,7 +84,7 @@ func RequestChatGPT(model string, messages []*ChatGPTMessage) (string, error) {
 	}
 
 	request.Header.Set("Content-Type", "application/json")
-	request.Header.Set("Authorization", "Bearer "+OPENAI_API_KEY)
+	request.Header.Set("Authorization", "Bearer "+config.OpenAI.ApiKey)
 	client := &http.Client{Timeout: 300 * time.Second}
 	response, err := client.Do(request)
 	if err != nil {

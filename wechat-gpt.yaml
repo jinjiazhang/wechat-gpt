@@ -1,0 +1,10 @@
+app:
+  port: 8008
+  logfile: wechat-gpt.log
+wechat:
+  token: jinjiazh
+  appid: wxf***e9b
+  appsecret: bf8f***7cd4
+openai:
+  apikey: sk-BML***Glui
+  model:  string

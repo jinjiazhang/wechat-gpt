@@ -3,13 +3,6 @@ package main
 import "encoding/xml"
 
 var (
-	OPENAI_API_KEY   string
-	WECHAT_TOKEN     string
-	WECHAT_APPID     string
-	WECHAT_APPSECRET string
-)
-
-var (
 	kMsgTypeEvent = "event"
 	kMsgTypeText  = "text"
 	kMsgTypeImage = "image"
