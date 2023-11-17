@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -77,8 +78,8 @@ func RequestChatGPT(model string, messages []*ChatGPTMessage) (string, error) {
 		return "", err
 	}
 
-	url := "https://api.openai.com/v1/chat/completions"
-	request, err := http.NewRequest("POST", url, bytes.NewBuffer(reqBody))
+	chatUrl := "https://api.openai.com/v1/chat/completions"
+	request, err := http.NewRequest("POST", chatUrl, bytes.NewBuffer(reqBody))
 	if err != nil {
 		return "", err
 	}
@@ -86,6 +87,14 @@ func RequestChatGPT(model string, messages []*ChatGPTMessage) (string, error) {
 	request.Header.Set("Content-Type", "application/json")
 	request.Header.Set("Authorization", "Bearer "+config.OpenAI.ApiKey)
 	client := &http.Client{Timeout: 300 * time.Second}
+
+	if config.OpenAI.Proxy != "" {
+		proxyUrl, _ := url.Parse(config.OpenAI.Proxy)
+		client.Transport = &http.Transport{
+			Proxy: http.ProxyURL(proxyUrl),
+		}
+	}
+
 	response, err := client.Do(request)
 	if err != nil {
 		return "", err

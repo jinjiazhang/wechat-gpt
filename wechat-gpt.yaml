@@ -7,4 +7,5 @@ wechat:
   appsecret: bf8f***7cd4
 openai:
   apikey: sk-BML***Glui
-  model:  string
+  model: string
+  proxy: string

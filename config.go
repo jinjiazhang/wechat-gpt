@@ -11,6 +11,7 @@ type WechatConfig struct {
 type OpenAIConfig struct {
 	ApiKey string
 	Model  string
+	Proxy  string
 }
 
 type AppConfig struct {
