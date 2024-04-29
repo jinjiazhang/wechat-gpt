@@ -34,6 +34,7 @@ func main() {
 	log.Printf("load config: %+v", config)
 
 	setupLogs()
+	http.HandleFunc("/chat", ProxyChatGPT)
 	http.HandleFunc("/message", HandleMessage)
 	http.ListenAndServe(fmt.Sprintf(":%d", config.App.Port), nil)
 }

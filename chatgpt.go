@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -127,4 +128,37 @@ func RequestChatGPT(model string, messages []*ChatGPTMessage) (string, error) {
 		reply = rsp.Choices[0].Message.Content
 	}
 	return reply, nil
+}
+
+func ProxyChatGPT(w http.ResponseWriter, r *http.Request) {
+	chatUrl := "https://api.openai.com/v1/chat/completions"
+	request, err := http.NewRequest(r.Method, chatUrl, r.Body)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	request.Header.Set("Authorization", "Bearer "+config.OpenAI.ApiKey)
+	for header, values := range r.Header {
+		for _, value := range values {
+			request.Header.Add(header, value)
+		}
+	}
+
+	client := &http.Client{}
+	resp, err := client.Do(request)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadGateway)
+		return
+	}
+	defer resp.Body.Close()
+
+	// 复制目标服务器的响应头部和响应体到原始响应中
+	for header, values := range resp.Header {
+		for _, value := range values {
+			w.Header().Add(header, value)
+		}
+	}
+	w.WriteHeader(resp.StatusCode)
+	io.Copy(w, resp.Body)
 }
